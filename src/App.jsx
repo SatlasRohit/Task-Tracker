@@ -6,11 +6,14 @@ function App(){
 const [tasks,setTasks] = useState([]);
 const [title,setTitle] = useState("");
 const [editId,setEditId] = useState(null);
+const [search,setSearch] = useState("");
 
 const loadTasks = ()=>{
+
 fetch("http://localhost:5000/tasks")
 .then(res=>res.json())
 .then(data=>setTasks(data));
+
 }
 
 useEffect(()=>{
@@ -19,49 +22,60 @@ loadTasks();
 
 const addTask = ()=>{
 
+if(title.trim()===""){
+alert("Enter Task");
+return;
+}
+
 fetch("http://localhost:5000/tasks",{
+
 method:"POST",
+
 headers:{
 "Content-Type":"application/json"
 },
+
 body:JSON.stringify({
 title:title,
 status:"Pending"
 })
+
 })
 .then(()=>{
 setTitle("");
 loadTasks();
 });
-}
 
-const deleteTask = (id)=>{
-fetch(`http://localhost:5000/tasks/${id}`,{
-method:"DELETE"
-})
-.then(()=>loadTasks());
 }
 
 const editTask = (task)=>{
+
 setTitle(task.title);
 setEditId(task._id);
+
 }
 
 const updateTask = ()=>{
+
 fetch(`http://localhost:5000/tasks/${editId}`,{
+
 method:"PUT",
+
 headers:{
 "Content-Type":"application/json"
 },
+
 body:JSON.stringify({
 title:title
 })
+
 })
 .then(()=>{
-setEditId(null);
 setTitle("");
+setEditId(null);
 loadTasks();
 });
+
 }
 
 const changeStatus = (task)=>{
@@ -69,13 +83,17 @@ const changeStatus = (task)=>{
 const newStatus = task.status === "Pending" ? "Completed" : "Pending";
 
 fetch(`http://localhost:5000/tasks/${task._id}`,{
+
 method:"PUT",
+
 headers:{
 "Content-Type":"application/json"
 },
+
 body:JSON.stringify({
 status:newStatus
 })
+
 })
 .then(()=>loadTasks());
 
@@ -130,9 +148,22 @@ Add Task
 
 <hr/>
 
+<h3>Search Task</h3>
+
+<input
+className="form-control mb-3"
+placeholder="Search Task"
+value={search}
+onChange={(e)=>setSearch(e.target.value)}
+/>
+
 <h3>Task List</h3>
 
-{tasks.map((task)=>(
+{tasks
+.filter((task)=>
+task.title.toLowerCase().includes(search.toLowerCase())
+)
+.map((task)=>(
 
 <div
 key={task._id}
@@ -142,7 +173,6 @@ className="card p-3 m-2 d-flex flex-row justify-content-between"
 <div>
 
 <h5>{task.title}</h5>
-
 <p>Status: {task.status}</p>
 
 </div>
@@ -154,13 +184,6 @@ className="btn btn-primary m-1"
 onClick={()=>editTask(task)}
 >
 Edit
-</button>
-
-<button
-className="btn btn-danger m-1"
-onClick={()=>deleteTask(task._id)}
->
-Delete
 </button>
 
 <button
